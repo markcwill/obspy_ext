@@ -2,7 +2,7 @@
 # by Mark Williams 2012.013
 # Oregon State University
 #
-# Contains basic functions to interect with (read) data form Antelope
+# Contains basic functions to interact with (read) data from Antelope
 # Datascope database tables into ObsPy using the Antelope Python interface.
 #
 # This module will automatically add the antelope path, provided you have the
@@ -41,12 +41,14 @@
 #               -db2object is now just a functionized version of the
 #                Dbview class constuctor
 #      2012.025 -v0.2.0
-#               -added two classes, DbAttribPtr and DbAttribPtrList. For
+#               -added two classes, DbrecordPtr and DbviewPtr. For
 #                large tables, this works better as only the pointers
 #                are stored, not the entire table. Otherwise, they work
 #                the same.
 #      2012.026 -v0.2.1
-#               -got DbMegaPtr working... one pointer, one love.
+#               -got AttribDbptr working... one pointer, one love.
+#      2012.027 -added to git and pushed to my github, now that
+#                everything works. Future changes documented there.
 #
 # FUTURE:
 # - possibly change the tuple attributes of DBrecord to lists?
