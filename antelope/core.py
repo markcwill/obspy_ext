@@ -23,7 +23,7 @@
 #       - unpack the source to src/contrib under the antelope dir
 #       - DO NOT 'make' the whole thing, especially if your contributed
 #         programs are working fine... I have had some compiler/linker issues
-#         related to 32/64 bit stuff. I don't reccommend it.
+#         related to 32/64 bit stuff. I don't recommend it.
 #
 # (2) Run the 'localmake_config' utility from command line
 #       - enter the paths to the version of python you are using
@@ -43,12 +43,12 @@
 #               -db2object is now just a functionized version of the
 #                Dbview class constuctor
 #      2012.025 -v0.2.0
-#               -added two classes, DbAttribPtr and DbAttribPtrList. For
+#               -added two classes, DbrecordPtr and DbviewPtr. For
 #                large tables, this works better as only the pointers
 #                are stored, not the entire table. Otherwise, they work
 #                the same.
 #      2012.026 -v0.2.1
-#               -got DbMegaPtr working... one pointer, one love.
+#               -got AttribDbptr working... one pointer, one love.
 #
 # FUTURE:
 # - possibly change the tuple attributes of DBrecord to lists?
@@ -86,9 +86,9 @@
 # DbviewPtr   - A list of DbrecordPtr's. Suitable for most occasions. Because
 #               Dbview's can take up memory for a lot of records.
 #
-# AttribDbptr - A test class I'm building which consists of just a couple
-#               pointers, no matter how many records are contained. Based on
-#               DbviewPtr.
+# AttribDbptr - A test class I'm building which consists of just one
+#               pointer, no matter how many records are contained. Based on
+#               DbviewPtr, list and Dbptr
 #
 # db2object   - just a function that calls the constructor for Dbview. This
 #               module began as me writing the 'db2struct' function in MATLAB
@@ -366,7 +366,7 @@ class AttribDbptr(list):
     
     No data (not even individual record pointers) are stored. The object acts like
     a list (similar to Dbview and DbviewPtr) but the entire
-    contents are just a pointer to an open db and one integer
+    contents are just a pointer to an open db.
     
     When accessing items, will return a DbrecordPtr, by building a pointer,
     rather than actually storing them in the list.
@@ -394,7 +394,6 @@ class AttribDbptr(list):
     TKM 42.8601 75.3184
     """
     Ptr = Dbptr() # the only data stored locally
-    _rptr = -1    # internal pointer for the 'list'
     
     def __init__(self, dbv=None):
         """
@@ -424,17 +423,15 @@ class AttribDbptr(list):
         return self.Ptr.nrecs()
     
     def __iter__(self):
-        """Required for an iterator"""
-        return self
+        """        
+        Produces a generator which gives the next item in the list
+        when called.
         
-    def next(self):
-        """Return next item in the 'list'"""
-        self._rptr += 1
-        if self._rptr < len(self):
-            return self.__getitem__(self._rptr)
-        else:
-            self._rptr = -1
-            raise StopIteration    
+        Allows class to act like a list iterator in a for loop,
+        for example, even though it is empty.
+        """
+        for index in xrange(len(self)):
+            yield self.__getitem__(index)   
 
     # Convenience methods
     def col(self, field):
