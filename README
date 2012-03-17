@@ -78,17 +78,19 @@
 # Dbrecord    - basically a dictionary/object which holds all the data from
 #               one record of a table. Field access as key or attribute.
 #
-# Dbview      - A list of Dbrecord's. ALL data are local, in namespace and memory.
+# DbrecordList 
+#             - A list of Dbrecord's. ALL data are local, in namespace and memory.
 #
 # DbrecordPtr - acts the same as a Dbrecord, but the data are not local,
 #               they are read from/(AND WRITTEN TO) to the database.
 #
-# DbviewPtr   - A list of DbrecordPtr's. Suitable for most occasions. Because
-#               Dbview's can take up memory for a lot of records.
+# DbrecordPtrList
+#             - A list of DbrecordPtr's. Suitable for most occasions. Because
+#               DbrecordLists can take up memory for a lot of records.
 #
-# AttribDbptr - A test class I'm building which consists of just a couple
-#               pointers, no matter how many records are contained. Based on
-#               DbviewPtr.
+# AttribDbptr - A test class I'm building which consists of just one 
+#               pointer, no matter how many records are contained. Based on
+#               DbrecordPtrList.
 #
 # db2object   - just a function that calls the constructor for Dbview. This
 #               module began as me writing the 'db2struct' function in MATLAB
