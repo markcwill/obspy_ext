@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 #
-# obspy antelope module
+# dbobjptrs.py
+#
+# obspy antelope database object pointers module
 # by Mark Williams 2012.013
 # Oregon State University
 #
@@ -8,6 +10,9 @@
 # Datascope database tables using the Antelope Python interface.
 #
 # These do NOT depend on ObsPy, one can use them with only the Antleope API
+# However they hold database pointers (Dbptrs) which much point to open
+# databases for the classes to work properly. The advantage is speed and
+# memory footprint when working with large database tables.
 
 import sys,os              
 sys.path.append(os.path.join(os.environ['ANTELOPE'],'local','data','python'))
@@ -107,7 +112,7 @@ class DbrecordPtr(dict, object):
         return ' '.join(fields)
 
 
-class DbviewPtr(list):
+class DbrecordPtrList(list):
     """
     A list-like container of DbrecordPtr objects.
     
@@ -117,19 +122,19 @@ class DbviewPtr(list):
     .. rubric:: Example
     >>> db = dbopen('demo','r')
     >>> db.lookup(table='site')
-    >>> dblist = DbviewPtr(db)
+    >>> dblist = DbrecordPtrList(db)
     >>> db.nrecs() == len(dblist)
     True
     
     """
     def __init__(self, dbv=None):
         """
-        Creates a Dbview from a pointer
+        Creates from a pointer
         
         :type dbv: antelope.datascope.Dbptr
         :param dbv: Open pointer to an Antelope database view or table
         """
-        super(DbviewPtr,self).__init__()
+        super(DbrecordPtrList,self).__init__()
         if isinstance(dbv, Dbptr):
             db = Dbptr(dbv)
             self.extend([DbrecordPtr(db) for db.record in range(db.nrecs())])
@@ -160,7 +165,7 @@ class AttribDbptr(list):
     When accessing items, will return a DbrecordPtr, by building a pointer,
     rather than actually storing them in the list.
     
-    Should work exactly like DbviewPtr except slicing doesn't work right now. That
+    Should work exactly like DbrecordPtrList except slicing doesn't work right now. That
     may take some work (should it be implemented as subsetting, or just selecting within
     Python?)
     
@@ -186,7 +191,7 @@ class AttribDbptr(list):
     
     def __init__(self, dbv=None):
         """
-        Sets the pointer
+        Sets the pointer.
         
         :type dbv: antelope.datascope.Dbptr
         :param dbv: Open pointer to an Antelope database view or table
@@ -198,12 +203,17 @@ class AttribDbptr(list):
         
     def __getitem__(self, index):
         """
-        Build a pointer to an individual record
+        Build a pointer to an individual record.
+        Also supports negative indexing.
         """
         if 0 <= index < len(self):
             dbp = Dbptr(self.Ptr)
             dbp[3] = index
             return DbrecordPtr(dbp)
+        elif -len(self) <= index < 0:
+            dbp = Dbptr(self.Ptr)
+            dbp[3] = len(self)+index
+            return DbrecordPtr(dbp)            
         else:
             raise ValueError("Index out of range")
 
