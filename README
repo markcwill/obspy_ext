@@ -1,103 +1,14 @@
-# obspy antelope module
-# Copyright by Mark Williams 2012.013
+# obspy extension modules
+#
+# Copyright by Mark Williams 2012
 # This software is distributed under the Lesser GNU Public License.
 # See files COPYING and COPYING.lesser for details.
 #
-# Contains basic functions to interact with (read) data from Antelope
-# Datascope database tables into ObsPy using the Antelope Python interface.
+# These are modules and extensions for using the ObsPy framework.
+# Some are in production shape and have good documentation, and
+# most likely others with more beta status will be added later.
 #
-# This module will automatically add the antelope path, provided you have the
-# $ANTELOPE environment variable set, which should be if Antelope is installed.
-# If memory serves me correctly, you may need to set $PFPATH for the setup
-# to actually work... just set it to the default:
+# See READMEs of individual modules for an overview and any
+# requirements they might have, for example, need Lindquist's
+# python API for antelope in order to use the 'antelope' mod.
 #
-# prompt$ PFPATH=$ANTELOPE/data/pf
-#
-# Obviously, you need to have the antelope python modules compiled and
-# working on your machine before the import below will work. Here is the short
-# version, adapted from /opt/antelope/5.0-64/Changes.txt:
-#-----------------------------------------------------------------------------
-# (1) Download the whole contributed-code repository from the github:
-#       https://github.com/antelopeusersgroup/antelope_contrib
-#       - unpack the source to src/contrib under the antelope dir
-#       - DO NOT 'make' the whole thing, especially if your contributed
-#         programs are working fine... I have had some compiler/linker issues
-#         related to 32/64 bit stuff. I don't reccommend it.
-#
-# (2) Run the 'localmake_config' utility from command line
-#       - enter the paths to the version of python you are using
-#
-# (3) Compile the interfaces by hand or, provided the
-#     source-code is in the standard location $ANTELOPE/src/contrib,
-#     you may use the localmake(1) utility e.g.:
-#  	    prompt$ localmake python_antelope
-#-----------------------------------------------------------------------------
-#
-# LOG: 2012.012 -Drafted v0.1.0 assembled from other classes/functions
-#                and my personal modules.
-#      2012.019 -v0.1.1
-#               -Dbrecord now inherits from Obspy AttribDict, and
-#               -New class! Dbview is a list of Dbrecords (a view OR
-#                a table)
-#               -db2object is now just a functionized version of the
-#                Dbview class constuctor
-#      2012.025 -v0.2.0
-#               -added two classes, DbrecordPtr and DbviewPtr. For
-#                large tables, this works better as only the pointers
-#                are stored, not the entire table. Otherwise, they work
-#                the same.
-#      2012.026 -v0.2.1
-#               -got AttribDbptr working... one pointer, one love.
-#      2012.027 -added to git and pushed to my github, now that
-#                everything works. Future changes documented there.
-#
-# FUTURE:
-# - possibly change the tuple attributes of DBrecord to lists?
-#
-# - in place of dbTABLE_NAME in Dbrecord, check for dbTABLE_IS_VIEW
-#   and use dbVIEW_TABLES? Might make repr string awkward though.
-#
-# - Could try and add db fields right into Stats in readANTELOPE,
-#   if a joined view is passed, can contain other info like lat/lon
-#   which for now will be in trace.db of the Trace.
-#
-# - Could make a realish ORM by creating a Dbview class which contains the
-#   data, an AttribDptr and an _update() method. Then one could make changes
-#   locally and do a type of 'commit' by updating the pointer object using
-#   the data in the local object.
-#
-# NOTES:
-# readANTELOPE:
-# - Adding the 'db' attribute to Trace.stats basically remaps the Dbrecord
-#   object to a AttribDict, because it passes the test as an instance of dict
-#   basically a coding issue in Stats.__setattr__(), so it's either accept
-#   that or do what I did and make it a Trace attribute directly.
-#
-##############################################################################
-# OVERVIEW:
-#
-# Dbrecord    - basically a dictionary/object which holds all the data from
-#               one record of a table. Field access as key or attribute.
-#
-# DbrecordList 
-#             - A list of Dbrecord's. ALL data are local, in namespace and memory.
-#
-# DbrecordPtr - acts the same as a Dbrecord, but the data are not local,
-#               they are read from/(AND WRITTEN TO) to the database.
-#
-# DbrecordPtrList
-#             - A list of DbrecordPtr's. Suitable for most occasions. Because
-#               DbrecordLists can take up memory for a lot of records.
-#
-# AttribDbptr - A test class I'm building which consists of just one 
-#               pointer, no matter how many records are contained. Based on
-#               DbrecordPtrList.
-#
-# db2object   - just a function that calls the constructor for Dbview. This
-#               module began as me writing the 'db2struct' function in MATLAB
-#               in Pythonese.
-#
-# readANTELOPE - Function which acts like an obspy.read for a 'wfdisc' table
-#                (or any table which contains a waveform filename). Gives you
-#                a Stream with 1 Trace for each record line in wfdisc, and
-#                puts a Dbrecord in as an attribute of the Trace.
