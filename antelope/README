@@ -40,9 +40,9 @@
 #               -New class! Dbview is a list of Dbrecords (a view OR
 #                a table)
 #               -db2object is now just a functionized version of the
-#                Dbview class constuctor
+#                DbrecordList class constuctor
 #      2012.025 -v0.2.0
-#               -added two classes, DbrecordPtr and DbviewPtr. For
+#               -added two classes, DbrecordPtr and DbrecordPtrList. For
 #                large tables, this works better as only the pointers
 #                are stored, not the entire table. Otherwise, they work
 #                the same.
@@ -61,7 +61,7 @@
 #   if a joined view is passed, can contain other info like lat/lon
 #   which for now will be in trace.db of the Trace.
 #
-# - Could make a realish ORM by creating a Dbview class which contains the
+# - Could make a realish ORM by creating a Dbrecord class which contains the
 #   data, an AttribDptr and an _update() method. Then one could make changes
 #   locally and do a type of 'commit' by updating the pointer object using
 #   the data in the local object.

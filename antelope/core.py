@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.environ['ANTELOPE'],'local','data','python'))
 from antelope.datascope import *  # all is necessary for db query variables
 from obspy.core import read, Stream, UTCDateTime
 from numpy import array
-from obspy_ext.antelope.dbobjs import Dbrecord, DbrecordList 
+from obspy_ext.antelope.dbobjects import Dbrecord, DbrecordList 
 
 
 def db2object(dbv):

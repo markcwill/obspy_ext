@@ -5,5 +5,5 @@
 obspy antelope module
 """
 from obspy_ext.antelope.core import (db2object, readANTELOPE)
-from obspy_ext.antelope.dbobjs import (Dbrecord, DbrecordList)
-from obspy_ext.antelope.dbobjptrs import (DbrecordPtr, DbrecordPtrList, AttribDbptr)
+from obspy_ext.antelope.dbobjects import (Dbrecord, DbrecordList)
+from obspy_ext.antelope.dbpointers import (DbrecordPtr, DbrecordPtrList, AttribDbptr)
