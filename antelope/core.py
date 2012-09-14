@@ -7,7 +7,8 @@
 # Contains basic functions to interect with (read) data from Antelope
 # Datascope database tables into ObsPy using the Antelope Python interface.
 
-import sys,os              
+import sys,os
+version_string = os.environ['ANTELOPE'].split('/')[-1]
 sys.path.append(os.path.join(os.environ['ANTELOPE'],'local','data','python'))
 from antelope.datascope import *  # all is necessary for db query variables
 from obspy.core import read, Stream, UTCDateTime
