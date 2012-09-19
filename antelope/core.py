@@ -9,7 +9,11 @@
 
 import sys,os
 version_string = os.environ['ANTELOPE'].split('/')[-1]
-sys.path.append(os.path.join(os.environ['ANTELOPE'],'local','data','python'))
+if '5.2' in version_string:
+    pydirs = ['data','python']
+else:
+    pydirs = ['local','data','python']
+sys.path.append(os.path.join(os.environ['ANTELOPE'], *pydirs))
 from antelope.datascope import *  # all is necessary for db query variables
 from obspy.core import read, Stream, UTCDateTime
 from numpy import array
@@ -83,18 +87,18 @@ def readANTELOPE(database, station=None, channel=None, starttime=None, endtime=N
         db = Dbptr(database)
     elif isinstance(database,str):
         db = dbopen(database, 'r')
-        db.lookup(table='wfdisc')
+        db = dblookup(db,table='wfdisc')
     else:
         raise TypeError("Must input a string or pointer to a valid database")
         
     if station is not None:
-        db.subset('sta=~/{0}/'.format(station))
+        db = dbsubset(db,'sta=~/{0}/'.format(station))
     if channel is not None:
-        db.subset('chan=~/{0}/'.format(channel))
+        db = dbsubset(db,'chan=~/{0}/'.format(channel))
     if starttime is not None and endtime is not None:
         ts = starttime.timestamp
         te = endtime.timestamp
-        db.subset('endtime > {0} && time < {1}'.format(ts,te) )
+        db = dbsubset(db,'endtime > {0} && time < {1}'.format(ts,te) )
     else:
         ts = starttime
         te = endtime
