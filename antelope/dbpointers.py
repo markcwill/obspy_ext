@@ -243,9 +243,14 @@ class AttribDbptr(list):
             else:
                 raise ValueError("Index out of range")
         elif isinstance(index,slice):
-            raise NotImplementedError("You just passed a slice")
+            #raise NotImplementedError("You just passed a slice")
+            return [self[x] for x in xrange(*index.indices(len(self)))]
         else:
             raise TypeError("Use an int or a slice to get records")
+
+    def __getslice__(self,i,j):
+        """Override builtin list slicing"""
+        return self.__getitem__(slice(i,j))
 
     def __len__(self):
         """Number of items in the view"""
