@@ -194,8 +194,9 @@ class AttribDbptr(list):
     TKM 42.8601 75.3184
     """
     Ptr = Dbptr() # the only data stored locally
+    _opened = False # True if db was opened by __init__()
 
-    def __init__(self, db=None, **kwargs):
+    def __init__(self, database=None, **kwargs):
         """
         Sets the pointer.
 
@@ -203,17 +204,27 @@ class AttribDbptr(list):
         :param dbv: Open pointer to an Antelope database view or table
         """
         super(AttribDbptr,self).__init__()
-        if isinstance(db, Dbptr):
-            self.Ptr = Dbptr(db)
-        elif isinstance(db, str):
-            db = dbopen(db,'r')
+        if isinstance(database, Dbptr):
+            self.Ptr = Dbptr(database)
+        elif isinstance(database, str):
+            db = dbopen(database,'r')
             self.Ptr = db
+            self._opened = True
         else:
             raise TypeError("Input pointer or string of valid database")
         if kwargs:
             self.Ptr = dblookup(db,**kwargs)
             
         # otherwise returns empty list
+
+    def __del__(self):
+        """Close the db if it was opened on creation
+        This is a weird and dangerous one but not having it
+        might be worse. Counting refs to db pointers is not
+        something I want to do, and...
+        """
+        if self._opened:
+            self.Ptr.close()
 
     def __getitem__(self, index):
         """
