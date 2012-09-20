@@ -10,7 +10,7 @@
 # Datascope database tables using the Antelope Python interface.
 #
 # These do NOT depend on ObsPy, one can use them with only the Antleope API
-# However they hold database pointers (Dbptrs) which much point to open
+# However they hold database pointers (Dbptrs) which must point to open
 # databases for the classes to work properly. The advantage is speed and
 # memory footprint when working with large database tables.
 
@@ -194,7 +194,7 @@ class AttribDbptr(list):
     """
     Ptr = Dbptr() # the only data stored locally
 
-    def __init__(self, dbv=None):
+    def __init__(self, db=None, **kwargs):
         """
         Sets the pointer.
 
@@ -202,8 +202,16 @@ class AttribDbptr(list):
         :param dbv: Open pointer to an Antelope database view or table
         """
         super(AttribDbptr,self).__init__()
-        if isinstance(dbv, Dbptr):
-            self.Ptr = Dbptr(dbv)
+        if isinstance(db, Dbptr):
+            self.Ptr = Dbptr(db)
+        elif isinstance(db, str):
+            db = dbopen(db,'r')
+            self.Ptr = db
+        else:
+            raise TypeError("Input pointer or string of valid database")
+        if kwargs:
+            self.Ptr = dblookup(db,**kwargs)
+            
         # otherwise returns empty list
 
     def __getitem__(self, index):
