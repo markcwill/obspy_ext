@@ -13,12 +13,13 @@
 # created, a db can be closed or destroyed and the data is in python memory.
 
 import sys,os              
-version_string = os.environ['ANTELOPE'].split('/')[-1]
-if '5.2' in version_string:
-    pydirs = ['data','python']
-else:
-    pydirs = ['local','data','python']
-sys.path.append(os.path.join(os.environ['ANTELOPE'], *pydirs))
+_version_string = os.environ['ANTELOPE'].split('/')[-1]
+_pydirs = ['data','python']
+if float(_version_string[:3]) < 5.2:
+    _pydirs = ['local'] + _pydirs
+_pypath = os.path.join(os.environ['ANTELOPE'], *_pydirs)
+if _pypath not in sys.path:
+    sys.path.append(_pypath)
 from antelope.datascope import *  # all is necessary for db query variables
 from obspy.core.util import AttribDict
 from numpy import array
