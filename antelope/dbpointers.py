@@ -144,6 +144,10 @@ class DbrecordPtrList(list):
         if isinstance(dbv, Dbptr):
             db = Dbptr(dbv)
             self.extend([DbrecordPtr(db) for db.record in range(db.nrecs())])
+        elif isinstance(dbv,list):
+            self.extend([x for x in dbv if isinstance(x,DbrecordPtr)])
+        else:
+            pass
         # otherwise returns empty list
 
     # Convenience functions
