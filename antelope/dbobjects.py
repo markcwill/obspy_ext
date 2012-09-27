@@ -12,14 +12,8 @@
 # These classes load data from the database into python on creation. Once
 # created, a db can be closed or destroyed and the data is in python memory.
 
-import sys,os              
-_version_string = os.environ['ANTELOPE'].split('/')[-1]
-_pydirs = ['data','python']
-if float(_version_string[:3]) < 5.2:
-    _pydirs = ['local'] + _pydirs
-_pypath = os.path.join(os.environ['ANTELOPE'], *_pydirs)
-if _pypath not in sys.path:
-    sys.path.append(_pypath)
+from obspy_ext.antelope.utils import add_antelope_path
+add_antelope_path()
 from antelope.datascope import *  # all is necessary for db query variables
 from obspy.core.util import AttribDict
 from numpy import array

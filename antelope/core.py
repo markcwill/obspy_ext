@@ -7,18 +7,13 @@
 # Contains basic functions to interect with (read) data from Antelope
 # Datascope database tables into ObsPy using the Antelope Python interface.
 
-import sys,os
-_version_string = os.environ['ANTELOPE'].split('/')[-1]
-_pydirs = ['data','python']
-if float(_version_string[:3]) < 5.2:
-    _pydirs = ['local'] + _pydirs
-_pypath = os.path.join(os.environ['ANTELOPE'], *_pydirs)
-if _pypath not in sys.path:
-    sys.path.append(_pypath)
-from antelope.datascope import *  # all is necessary for db query variables
-from obspy.core import read, Stream, UTCDateTime
 from numpy import array
+from obspy.core import read, Stream, UTCDateTime
+from obspy_ext.antelope.utils import add_antelope_path
 from obspy_ext.antelope.dbobjects import Dbrecord, DbrecordList 
+# Antelope path to python tools not added by default install
+add_antelope_path()               # adds path if not there
+from antelope.datascope import *  # all is necessary for db query variables
 
 
 def db2object(dbv):

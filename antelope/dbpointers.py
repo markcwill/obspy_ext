@@ -14,14 +14,8 @@
 # databases for the classes to work properly. The advantage is speed and
 # memory footprint when working with large database tables.
 
-import sys,os
-_version_string = os.environ['ANTELOPE'].split('/')[-1]
-_pydirs = ['data','python']
-if float(_version_string[:3]) < 5.2:
-    _pydirs = ['local'] + _pydirs
-_pypath = os.path.join(os.environ['ANTELOPE'], *_pydirs)
-if _pypath not in sys.path:
-    sys.path.append(_pypath)
+from obspy_ext.antelope.utils import add_antelope_path
+add_antelope_path()
 from antelope.datascope import *  # all is necessary for db query variables
 from numpy import array
 
@@ -165,7 +159,7 @@ class AttribDbptr(list):
     """
     A pointer to a DB view, that acts like a Python list of DbrecordPtr's.
 
-    This is essentially a very basic object-relational-mapper for an Antelope
+    This is a very basic object-relational-mapper for an Antelope
     Datascope database using the existing Dbptr class.
 
     No data (not even individual record pointers) are stored. The object acts like
@@ -173,11 +167,9 @@ class AttribDbptr(list):
     contents are just a pointer to an open db.
 
     When accessing items, will return a DbrecordPtr, by building a pointer,
-    rather than actually storing them in the list.
-
-    Should work exactly like DbrecordPtrList except slicing doesn't work right now. That
-    may take some work (should it be implemented as subsetting, or just selecting within
-    Python?)
+    rather than actually storing them in the list. A request for one list item
+    returns a DbrecordPtr, and a slice returns a list of DbrecordPtrs. This is
+    essentially the exact behavior of a Python list. You're welcome.
 
     Good for large datasets that would take up a lot of memory to load the whole table
     or even millions of DbrecordPtr's (which are holding one Dbptr each) into RAM.
