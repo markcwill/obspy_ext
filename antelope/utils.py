@@ -2,7 +2,7 @@
 #
 #
 """
-obspy antelope module
+obspy antelope module utilities
 """
 import sys, os
 def add_antelope_path():
@@ -13,3 +13,24 @@ def add_antelope_path():
 	_pypath = os.path.join(os.environ['ANTELOPE'], *_pydirs)
 	if _pypath not in sys.path:
 		sys.path.append(_pypath)
+
+
+add_antelope_path()
+from antelope.datascope import Dbptr
+
+def open_db_or_string(database, perm='r'):
+	'''
+	Check if a variable is a valid db or a string
+
+	Returns a pointer to an open db or throw an error
+	'''
+	if isinstance(database, Dbptr):
+		ptr = Dbptr(database)
+	elif isinstance(database, str):
+		ptr = dbopen(database, perm)
+		opened = True
+	else:
+		raise TypeError("Input must be a Dbptr or string of a valid database path")
+	return ptr, opened
+
+
