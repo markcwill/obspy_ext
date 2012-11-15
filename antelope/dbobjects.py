@@ -67,7 +67,7 @@ class Dbrecord(AttribDict):
             for field_name in self._fields_unsorted:
                 if db.query(dbVIEW_TABLE_COUNT) > 1:
                     if field_name in self.__dict__:
-                        field_name = '.'join(db.query(dbFIELD_BASE_TABLE),field_name)
+                        field_name = '.'.join(db.query(dbFIELD_BASE_TABLE),field_name)
                 try:
                     field_value = db.getv(field_name)[0]
                 except:

@@ -16,7 +16,7 @@ def add_antelope_path():
 
 
 add_antelope_path()
-from antelope.datascope import Dbptr
+from antelope.datascope import Dbptr, dbopen
 
 def open_db_or_string(database, perm='r'):
 	'''
