@@ -209,7 +209,7 @@ class AttribDbptr(list):
         else:
             raise TypeError("Input pointer or string of valid database")
         if kwargs:
-            self.Ptr = dblookup(db,**kwargs)
+            self.Ptr = dblookup(self.Ptr,**kwargs)
             
         # otherwise returns empty list
 
