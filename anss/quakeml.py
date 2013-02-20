@@ -16,8 +16,6 @@
 # ...              }
 # ...    )
 #
-import sys
-from aug.contrib.orm import AttribDbptr
 from obspy.core import UTCDateTime
 from obspy.core.event import *
 from obspy.core.quakeml import Pickler
