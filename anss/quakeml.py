@@ -83,18 +83,14 @@ class NamespacePickler(Pickler):
     methods, _serialize, and dumps which I then call from my own writeXML fxn,
     
     Basically, a namespace can be passed from writeNamespaceQuakeML as an
-    additional keyword argument, and this version of serialize will check
-    and implement it.
-
-    Right now, you can only pass one namespace, which will simply rename
-    the root element namespace from its default 'ns0' to a user choice.
-    xmlns:ns0 --> xmlns:catalog, for example. One can then add namespaced
-    attributes, like 'catalog:datasource' to QuakeML elements.
-    
-    The default namespace 'xmlns' is unchanged.
-
-    This is the simplest way to make your QuakeML compliant with
-    ANSS/USGS reporting.
+    additional keyword argument to dumps, and this version of serialize will check
+    and implement the namespace map. A couple things are still hard-coded in,
+    like the root element namespace, and attributes are automatically added
+    to event and focalMechanism tags. This produces fine QuakeML, but it's
+    not namespace generic. You would have to specify elements to add to, and
+    their prefixes, and maybe even their values, any way you slice it, it
+    would mean a lot more code modifications. Could just change the name to
+    'ANSSPickler'.
 
     When used without passing extra **kwargs, these class methods work
     exactly as their original ObsPy counterparts.
@@ -110,12 +106,14 @@ class NamespacePickler(Pickler):
         """
         Converts a Catalog object into XML string.
 
-        Modified by Mark - force 'ns0' namespace to be named
+        Modified by Mark - Check for namespaces and attributes for ANSS/USGS
         ----------------
         If kwargs contains a named variable called 'namespace', which is an 
-        XMLNamespace
-        esoteric elements (event, origin, momenttensor) for ANSS reporting
-        to USGS.
+        XMLNamespace, it will use it to add namespaces and any attributes
+        in a kwarg called 'attributes'.
+
+        Hard coded to put these attributes into specific esoteric elements
+        (event and focalMechanism, for now) for ANSS reporting to USGS.
         
         If used without this kwarg, works exactly as Pickler._serialize()
         """
@@ -185,7 +183,7 @@ class NamespacePickler(Pickler):
             # picks
             for pick in event.picks:
                 event_el.append(self._pick(pick))
-            # focal mechanisms
+            # focal mechanisms -MCW add ns attribs
             for focal_mechanism in event.focal_mechanisms:
                 focal_mech_el = self._focal_mechanism(focal_mechanism)
                 focal_mech_el.attrib.update(ns_attr)
