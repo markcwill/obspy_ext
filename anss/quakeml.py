@@ -7,16 +7,17 @@
 #
 # Requirements: 
 #               ObsPy (version with event, quakeml support)
-#               Antelope Users Group contributed python module
 #
 # Example:
 # >>> writeNamespaceQuakeML(catalog, 'test.xml', 
-# ...    namespace={'name'      : 'catalog',
-# ...               'attributes': { 'datasource': 'nn', 'dataid' : '999999'},
-# ...              }
+# ...    namespace=XMLNamespace(),
+# ...    attributes={ 'datasource':'XX', 'dataid':'999999',
+# ...                 'eventsource':'XX'
+# ...                }
 # ...    )
 #
 from obspy.core import UTCDateTime
+# get rid of star import
 from obspy.core.event import *
 from obspy.core.quakeml import Pickler
 from obspy.core.util import tostring
@@ -24,6 +25,52 @@ from obspy.core.util import tostring
 ##############################################################################
 # obspy tools for writing out QuakeML files
 ##############################################################################
+class XMLNamespace(AttribDict):
+    '''
+    Holds Namespace info
+    
+    Extra class I was trying to avoid, but it's a little better than
+    passing dicts of dicts of dicts, this has some useful methods,
+    which could be more elegantly implemeted in the Pickler class
+    at some other time...
+    '''
+    
+    default    = None   # str  - Default namespace (xmlns="this")
+    nsmap      = {}     # dict - namespace map for ElementTree elmts
+    prefix_map = {}     # dict - prefix keys with list of attributes
+                        #    (keys MUST be in nsmap)
+    
+    def __init__(self, **kwargs):
+        '''
+        Could work for any namespace, but init to QuakeML ANSS
+        '''
+        super(XMLNamespace, self).__init__()
+        self.default = "http://quakeml.org/xmlns/bed/1.2"
+        self.nsmap = {'q' : 'http://quakeml.org/xmlns/quakeml/1.2',
+                      'catalog': 'http://anss.org/xmlns/catalog/0.1'}
+        self.prefix_map = {'catalog': ['datasource','dataid','eventsource','eventid']}
+        if kwargs:
+            for k in kwargs:
+                self[k] = kwargs[k]
+    
+    def _prefix(self, key, prefix):
+        '''Return an namespaced element/attribute for a given name/prefix'''
+        return '{{{ns}}}{tag}'.format(ns=self.nsmap[prefix],tag=key)
+    
+    def map_prefix(self, attributes):
+        '''Return a namespaced attribute dict from the prefix map
+        
+        Curently a hackjob, won't support identical attributes in
+        different namespaces
+        '''
+        if isinstance(attributes, dict):
+            name = attributes.copy() 
+        for a in attributes:
+            for k in self.prefix_map.keys():
+                if a in self.prefix_map[k]:
+                    name[self._prefix(a,k)] = name.pop(a)
+        return name
+    
 
 #
 # Inherit Pickler, override _serialize for ANSS compatibility    
@@ -65,38 +112,33 @@ class NamespacePickler(Pickler):
 
         Modified by Mark - force 'ns0' namespace to be named
         ----------------
-        If kwargs contains a named variable called 'namespace', which is a dict --
-        namespace={'name' : <str of namespace>, 'attributes' : <dict of attr>}
-        -- it will use namespace['name'] as the default namespace, and
-        will stick all of the keys in namespace['attributes'] in selected
+        If kwargs contains a named variable called 'namespace', which is an 
+        XMLNamespace
         esoteric elements (event, origin, momenttensor) for ANSS reporting
         to USGS.
         
         If used without this kwarg, works exactly as Pickler._serialize()
         """
         # -MCW added if-else to specify ns0 namespace if desired
-        space = 'http://quakeml.org/xmlns/quakeml/1.2'
-        if 'namespace' in kwargs:
-            namespace = kwargs['namespace']
-            ns_name = namespace['name']
-            ns_attr = namespace['attributes'].copy()
-            nsmap = { ns_name : space }
-            # map attributes 'k' to new namespace new_k ='{space}k'
-            for k in ns_attr.keys():
-                new_k = '{{{ns}}}{tag}'.format(ns=space, tag=k)
-                ns_attr[new_k] = ns_attr.pop(k)
-        else:
-            nsmap = None
-            ns_name = None
-            ns_attr = {}
+        nsmap = {}
+        ns_attr = {}
+        default = 'http://quakeml.org/xmlns/bed/1.2'
+        root_space = 'http://quakeml.org/xmlns/quakeml/1.2'
+        if 'namespace' in kwargs and isinstance(kwargs['namespace'], XMLNamespace):
+            ns = kwargs['namespace']
+            default = ns.default
+            nsmap = ns.nsmap
+            root_space = nsmap['q'] # hard coded, fix this
+            # map attributes to proper namespace (temp solution)
+            if 'attributes' in kwargs:
+                ns_attr = ns.map_prefix(kwargs['attributes'])
         # -MCW end
         root_el = etree.Element(
-            '{{{ns}}}quakeml'.format(ns=space),
-            attrib={'xmlns': "http://quakeml.org/xmlns/bed/1.2"},
+            '{{{ns}}}quakeml'.format(ns=root_space),
+            attrib={'xmlns': default },
             nsmap=nsmap) # -MCW changed space tag, added nsmap
         catalog_el = etree.Element('eventParameters',
             attrib={'publicID': self._id(catalog.resource_id)})
-        catalog_el.attrib.update(ns_attr) # -MCW
         if catalog.description:
             self._str(catalog.description, catalog_el, 'description')
         self._comments(catalog.comments, catalog_el)
@@ -145,7 +187,9 @@ class NamespacePickler(Pickler):
                 event_el.append(self._pick(pick))
             # focal mechanisms
             for focal_mechanism in event.focal_mechanisms:
-                event_el.append(self._focal_mechanism(focal_mechanism))
+                focal_mech_el = self._focal_mechanism(focal_mechanism)
+                focal_mech_el.attrib.update(ns_attr)
+                event_el.append(focal_mech_el)
             # add event node to catalog
             catalog_el.append(event_el)
         return tostring(root_el, pretty_print=pretty_print)
