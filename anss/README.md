@@ -21,6 +21,9 @@ writeNamespaceQuakeML(catalog, 'quakeml.xml', nsmap=ns_mapping, attributes=atts)
 ```
 <?xml version='1.0' encoding='utf-8'?>
 <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:catalog="http://anss.org/xmlns/catalog/0.1" xmlns="http://quakeml.org/xmlns/bed/1.2">
-  <eventParameters publicID="quakeml:your_id_here" catalog:datasource="ZZ" catalog:dataid="999999">
+  <eventParameters publicID="smi:local/359a4eb6-1520-4096-88b7-6e75bc6b64c3">
+      <event publicID="smi:local/quakeml:your_id_here" catalog:dataid="999999" catalog:datasource="ZZ"/>
+  </eventParameters>
+</q:quakeml>
 ```
 
