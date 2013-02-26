@@ -3,15 +3,19 @@ This is just an archive for the obspy portion of my code which writes info from 
 
 ANSS is working on defining its QuakeML standard to utilize a namespace called 'catalog'. This modified ObsPy code adds the capability for renaming/defining a namespace. It is also set up (for now) to directly put in attributes into the 'event' and 'focalMechanism' elements, but this is a convenience hackjob for now.
 
-Added the XMLNamespace class, which can be passed into the Pickler. Still experimental and needs some generalization, but it works and produces valid QuakeML. Right now, a default XMLNamespace inits to the ANSS namespace mappings.
+One can now modify the lxml.etree namespace map by passing one to NamespacePickler through the write function included here. ONe can also pass a dictionary of dictionary variables as attributes. Still experimental and needs some generalization, but it works and produces valid QuakeML. Right now, a default NamespacePickler inits to the ANSS namespace mappings.
 
 ```python
 from obspy.core.event import *
-from quakeml import XMLNamespace, writeNamespaceQuakeML
+from quakeml import writeNamespaceQuakeML
 # build up a Catalog of Event objects, etc...
-catalog = Catalog(events=[my_events])
-atts = {'datasource':'ZZ', 'dataid':'999999'}
-writeNamespaceQuakeML(catalog, 'text.xml', namespace=XMLNamespace(), attributes=atts)
+catalog = Catalog(events=[Event()], resource_id=ResourceIdentifier('quakeml:your_id_here'))
+# this is unnecessary (the class has 'catalog' in its default nsmap), but included as an example
+ns_mapping = {'catalog': 'http://anss.org/xmlns/catalog/0.1'}
+# add any desired attributes (forced into event and focalMechanism elements)
+atts = {'catalog': {'datasource':'ZZ', 'dataid':'999999'}}
+# This produces the example
+writeNamespaceQuakeML(catalog, 'quakeml.xml', nsmap=ns_mapping, attributes=atts)
 ```
 ###Example file lines
 ```

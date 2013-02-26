@@ -25,53 +25,6 @@ from obspy.core.util import tostring
 ##############################################################################
 # obspy tools for writing out QuakeML files
 ##############################################################################
-class XMLNamespace(AttribDict):
-    '''
-    Holds Namespace info
-    
-    Extra class I was trying to avoid, but it's a little better than
-    passing dicts of dicts of dicts, this has some useful methods,
-    which could be more elegantly implemeted in the Pickler class
-    at some other time...
-    '''
-    
-    default    = None   # str  - Default namespace (xmlns="this")
-    nsmap      = {}     # dict - namespace map for ElementTree elmts
-    prefix_map = {}     # dict - prefix keys with list of attributes
-                        #    (keys MUST be in nsmap)
-    
-    def __init__(self, **kwargs):
-        '''
-        Could work for any namespace, but init to QuakeML ANSS
-        '''
-        super(XMLNamespace, self).__init__()
-        self.default = "http://quakeml.org/xmlns/bed/1.2"
-        self.nsmap = {'q' : 'http://quakeml.org/xmlns/quakeml/1.2',
-                      'catalog': 'http://anss.org/xmlns/catalog/0.1'}
-        self.prefix_map = {'catalog': ['datasource','dataid','eventsource','eventid']}
-        if kwargs:
-            for k in kwargs:
-                self[k] = kwargs[k]
-    
-    def _prefix(self, key, prefix):
-        '''Return an namespaced element/attribute for a given name/prefix'''
-        return '{{{ns}}}{tag}'.format(ns=self.nsmap[prefix],tag=key)
-    
-    def map_prefix(self, attributes):
-        '''Return a namespaced attribute dict from the prefix map
-        
-        Curently a hackjob, won't support identical attributes in
-        different namespaces
-        '''
-        if isinstance(attributes, dict):
-            name = attributes.copy() 
-        for a in attributes:
-            for k in self.prefix_map.keys():
-                if a in self.prefix_map[k]:
-                    name[self._prefix(a,k)] = name.pop(a)
-        return name
-    
-
 #
 # Inherit Pickler, override _serialize for ANSS compatibility    
 #
@@ -82,9 +35,10 @@ class NamespacePickler(Pickler):
     See obspy.core.quakeml for details on the Pickler class. This overrides two
     methods, _serialize, and dumps which I then call from my own writeXML fxn,
     
-    Basically, a namespace can be passed from writeNamespaceQuakeML as an
-    additional keyword argument to dumps, and this version of serialize will check
-    and implement the namespace map. A couple things are still hard-coded in,
+    Basically, this is a namespace-aware/editable version of Pickler, which
+    can implement a namespace map.
+    
+    A couple things are still hard-coded in,
     like the root element namespace, and attributes are automatically added
     to event and focalMechanism tags. This produces fine QuakeML, but it's
     not namespace generic. You would have to specify elements to add to, and
@@ -95,6 +49,34 @@ class NamespacePickler(Pickler):
     When used without passing extra **kwargs, these class methods work
     exactly as their original ObsPy counterparts.
     '''
+    nsmap = {    None : 'http://quakeml.org/xmlns/bed/1.2',
+                  'q' : 'http://quakeml.org/xmlns/quakeml/1.2',
+             'catalog': 'http://anss.org/xmlns/catalog/0.1',    }
+    
+    def _prefix(self, key, prefix=None):
+        '''Return an namespaced element/attribute for a given name/prefix'''
+        return '{{{ns}}}{tag}'.format(ns=self.nsmap[prefix],tag=key)
+    
+    def _prefix_mapper(self, tags, prefix=None):
+        '''Return a namespaced dictionary for a given dict/prefix'''
+        return dict([(self._prefix(tag, prefix),tags[tag]) for tag in tags])
+    
+    def _namespaced_attributes(self, attributes):
+        '''Return a namespaced dictionary given a dict of dicts
+        
+        Input: dict of dicts where keys are prefixes, like so:
+        attributes={'catalog':{'id': '1', 'source':'MoonBase'}}
+
+        Output: One dictionary containing all namespaced values in
+        all input dicts namespaced with their keys as prefixes.
+        
+        '''
+        ns_attributes = {}
+        for a in attributes:
+            ns_attributes.update(self._prefix_mapper(attributes[a], a))
+        return ns_attributes
+
+
     def dumps(self, catalog, **kwargs):
         """
         Exact copy of the Pickler.dumps() function, for consistency with 
@@ -108,33 +90,26 @@ class NamespacePickler(Pickler):
 
         Modified by Mark - Check for namespaces and attributes for ANSS/USGS
         ----------------
-        If kwargs contains a named variable called 'namespace', which is an 
-        XMLNamespace, it will use it to add namespaces and any attributes
-        in a kwarg called 'attributes'.
+        Can pass a namespace map 'nsmap' and 'attributes' dict keyed by map
+        prefix in as kwargs.
 
         Hard coded to put these attributes into specific esoteric elements
         (event and focalMechanism, for now) for ANSS reporting to USGS.
         
-        If used without this kwarg, works exactly as Pickler._serialize()
         """
         # -MCW added if-else to specify ns0 namespace if desired
-        nsmap = {}
+        root_prefix = 'q'
         ns_attr = {}
-        default = 'http://quakeml.org/xmlns/bed/1.2'
-        root_space = 'http://quakeml.org/xmlns/quakeml/1.2'
-        if 'namespace' in kwargs and isinstance(kwargs['namespace'], XMLNamespace):
-            ns = kwargs['namespace']
-            default = ns.default
-            nsmap = ns.nsmap
-            root_space = nsmap['q'] # hard coded, fix this
-            # map attributes to proper namespace (temp solution)
-            if 'attributes' in kwargs:
-                ns_attr = ns.map_prefix(kwargs['attributes'])
+        # allow for namespace map specification (optional)
+        if 'nsmap' in kwargs:
+            self.nsmap.update(kwargs['nsmap'])
+        # map attributes to proper namespacei using self.nsmap
+        if 'attributes' in kwargs:
+            ns_attr = self._namespaced_attributes(kwargs['attributes'])
         # -MCW end
         root_el = etree.Element(
-            '{{{ns}}}quakeml'.format(ns=root_space),
-            attrib={'xmlns': default },
-            nsmap=nsmap) # -MCW changed space tag, added nsmap
+            self._prefix('quakeml', root_prefix),
+            nsmap=self.nsmap) # -MCW
         catalog_el = etree.Element('eventParameters',
             attrib={'publicID': self._id(catalog.resource_id)})
         if catalog.description:
