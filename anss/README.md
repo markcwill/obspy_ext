@@ -9,7 +9,7 @@ One can now modify the lxml.etree namespace map by passing one to NamespacePickl
 from obspy.core.event import *
 from quakeml import writeNamespaceQuakeML
 # build up a Catalog of Event objects, etc...
-catalog = Catalog(events=[Event()], resource_id=ResourceIdentifier('quakeml:your_id_here'))
+catalog = Catalog(events=[Event(resource_id=ResourceIdentifier('quakeml:your_id_here'))])
 # this is unnecessary (the class has 'catalog' in its default nsmap), but included as an example
 ns_mapping = {'catalog': 'http://anss.org/xmlns/catalog/0.1'}
 # add any desired attributes (forced into event and focalMechanism elements)
